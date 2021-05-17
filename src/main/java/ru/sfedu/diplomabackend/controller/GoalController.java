@@ -22,26 +22,26 @@ public class GoalController {
 
 
     @RequestMapping(value="/goal/add")
-    public ModelAndView addTeamPage() {
-        ModelAndView modelAndView = new ModelAndView("add-team-form");
+    public ModelAndView addGoalPage() {
+        ModelAndView modelAndView = new ModelAndView("add-goal-form");
         modelAndView.addObject("goal", new Goal());
         return modelAndView;
     }
 
     @RequestMapping(value="/goal/add/process")
-    public ModelAndView addingTeam(@ModelAttribute Goal goal) {
+    public ModelAndView addingGoal(@ModelAttribute Goal goal) {
 
         ModelAndView modelAndView = new ModelAndView("home");
         goalService.addGoal(goal);
 
-        String message = "Team was successfully added.";
+        String message = "Goal was successfully added.";
         modelAndView.addObject("message", message);
 
         return modelAndView;
     }
 
     @RequestMapping(value="/goal/list")
-    public ModelAndView listOfTeams() {
+    public ModelAndView listOfGoals() {
         ModelAndView modelAndView = new ModelAndView("list-of-goals");
 
         List goals = goalService.getGoals();
@@ -51,7 +51,7 @@ public class GoalController {
     }
 
     @RequestMapping(value="/goal/edit/{id}", method=RequestMethod.GET)
-    public ModelAndView editTeamPage(@PathVariable Long id) {
+    public ModelAndView editGoalPage(@PathVariable Long id) {
         ModelAndView modelAndView = new ModelAndView("edit-goal-form");
         Goal goal = goalService.getById(id);
         modelAndView.addObject("goal",goal);
@@ -59,23 +59,23 @@ public class GoalController {
     }
 
     @RequestMapping(value="/goal/edit/{id}", method=RequestMethod.POST)
-    public ModelAndView edditingTeam(@ModelAttribute Goal goal, @PathVariable Long id) {
+    public ModelAndView edditingGoal(@ModelAttribute Goal goal, @PathVariable Long id) {
 
         ModelAndView modelAndView = new ModelAndView("home");
 
         goalService.updateGoal(goal);
 
-        String message = "Team was successfully edited.";
+        String message = "Goal was successfully edited.";
         modelAndView.addObject("message", message);
 
         return modelAndView;
     }
 
     @RequestMapping(value="/goal/delete/{id}", method=RequestMethod.GET)
-    public ModelAndView deleteTeam(@PathVariable Long id) {
+    public ModelAndView deleteGoal(@PathVariable Long id) {
         ModelAndView modelAndView = new ModelAndView("home");
         goalService.deleteGoal(id);
-        String message = "Team was successfully deleted.";
+        String message = "Goal was successfully deleted.";
         modelAndView.addObject("message", message);
         return modelAndView;
     }

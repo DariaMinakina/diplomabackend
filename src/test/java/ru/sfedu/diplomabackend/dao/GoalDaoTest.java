@@ -23,7 +23,7 @@ class GoalDaoTest {
     void addGoal() {
         log.info("addEntitySuccess");
         Date date = new Date();
-        Goal goal = new Goal(date, "goal_des", "completed", Priority.PRIORITY_1);
+        Goal goal = new Goal(date, "goal_des", "completed", Priority.PRIORITY_3);
         GoalDao instance = new GoalDao();
         Optional<Long> result = instance.addGoal(goal);
         log.info(result);
