@@ -1,25 +1,31 @@
 package ru.sfedu.diplomabackend.model;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
+import static ru.sfedu.diplomabackend.Constants.*;
+
+import java.util.stream.Stream;
+
 public enum Priority {
 
-    PRIORITY_1("HIGH"),
-    PRIORITY_2("MEDIUM"),
-    PRIORITY_3("LOW");
+    PRIORITY_1(HIGH_CONST),
+    PRIORITY_2(MEDIUM_CONST),
+    PRIORITY_3(LOW_CONST);
 
     private String pr;
 
-    private EnItemType(String code) {
-        this.code=code;
+    private Priority(String pr) {
+        this.pr=pr;
     }
 
     @JsonCreator
-    public static EnItemType decode(final String code) {
-        return Stream.of(EnItemType.values()).filter(targetEnum -> targetEnum.code.equals(code)).findFirst().orElse(null);
+    public static Priority decode(final String pr) {
+        return Stream.of(Priority.values()).filter(targetEnum -> targetEnum.pr.equals(pr)).findFirst().orElse(null);
     }
 
     @JsonValue
     public String getCode() {
-        return code;
+        return pr;
     }
 
 
