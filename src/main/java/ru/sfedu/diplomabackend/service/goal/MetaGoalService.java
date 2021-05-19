@@ -1,13 +1,13 @@
-package ru.sfedu.diplomabackend.dao;
+package ru.sfedu.diplomabackend.service.goal;
 
 import ru.sfedu.diplomabackend.model.Goal;
 
 import java.util.List;
 import java.util.Optional;
 
-public interface MetaGoalDao {
+public interface MetaGoalService {
 
-    Goal getById(Long id);
+   Goal getById(Long id);
 
     Optional<Long> addGoal (Goal goal);
 

@@ -1,8 +1,8 @@
-package ru.sfedu.diplomabackend.service;
+package ru.sfedu.diplomabackend.service.goal;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import ru.sfedu.diplomabackend.dao.GoalDao;
+import ru.sfedu.diplomabackend.dao.goal.GoalDao;
 import ru.sfedu.diplomabackend.model.Goal;
 
 import javax.transaction.Transactional;

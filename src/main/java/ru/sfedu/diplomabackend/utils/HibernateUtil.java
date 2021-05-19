@@ -66,6 +66,9 @@ public class HibernateUtil {
 
     private static void addEntities(MetadataSources metadataSources){
         metadataSources.addAnnotatedClass(Goal.class);
+        metadataSources.addAnnotatedClass(DiaryDayMental.class);
+        metadataSources.addAnnotatedClass(DiaryDayPhysics.class);
+        metadataSources.addAnnotatedClass(DiaryDay.class);
     }
 
 }
