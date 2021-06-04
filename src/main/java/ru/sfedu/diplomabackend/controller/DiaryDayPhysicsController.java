@@ -1,83 +1,112 @@
 package ru.sfedu.diplomabackend.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.MediaType;
+import lombok.AllArgsConstructor;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.ModelAndView;
-import ru.sfedu.diplomabackend.model.DiaryDayMental;
+import org.springframework.web.client.HttpClientErrorException;
+import ru.sfedu.diplomabackend.Constants;
 import ru.sfedu.diplomabackend.model.DiaryDayPhysics;
-import ru.sfedu.diplomabackend.model.Goal;
+import ru.sfedu.diplomabackend.security.JwtTokenProvider;
+import ru.sfedu.diplomabackend.security.dto.DiaryDayPostPhysicsRequestDto;
 import ru.sfedu.diplomabackend.service.diaryday.DiaryDayPhysicsService;
-import ru.sfedu.diplomabackend.service.goal.GoalService;
+import ru.sfedu.diplomabackend.service.user.UserService;
 
-import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping(
-        value = "/diaryday/physics",
-        produces = { MediaType.APPLICATION_JSON_VALUE  })
+@RequestMapping(value = "/api/physics")
+@AllArgsConstructor
 public class DiaryDayPhysicsController {
 
-    @Autowired
-    private DiaryDayPhysicsService diaryDayPhysicsService;
+    private final JwtTokenProvider jwtTokenProvider;
 
-    @RequestMapping(value="/add")
-    public ModelAndView addDiaryDayPhysicsPage() {
-        ModelAndView modelAndView = new ModelAndView("add-goal-form");
-        modelAndView.addObject("DiaryDayPhysics", new DiaryDayPhysics());
-        return modelAndView;
+    private final UserService userService;
+
+    private final DiaryDayPhysicsService diaryDayPhysicsService;
+
+    private HttpClientErrorException createHttpException(HttpStatus status, String message) {
+        return HttpClientErrorException.create(status, message, HttpHeaders.EMPTY, null, null);
     }
 
-    @RequestMapping(value="/add/process")
-    public ModelAndView addingDiaryDayPhysics(@ModelAttribute DiaryDayPhysics diaryDayPhysics) {
-
-        ModelAndView modelAndView = new ModelAndView("home");
-        diaryDayPhysicsService.addDiaryDayPhysics(diaryDayPhysics);
-
-        String message = "DiaryDayPhysics was successfully added.";
-        modelAndView.addObject("message", message);
-
-        return modelAndView;
+    @GetMapping
+    public ResponseEntity<?> getDiaryDayPhysicsByUserEmail(@RequestHeader("Authorization") String token) {
+        try {
+            return new ResponseEntity<>(diaryDayPhysicsService.findDiaryDayPhysicsByUserId(userService.findByEmail(jwtTokenProvider.getUsername(token)).get().getId())
+                    .stream()
+                    .collect(Collectors.toSet()),
+                    HttpStatus.OK);
+        } catch (HttpClientErrorException exception) {
+            return new ResponseEntity<>(exception.getStatusText(), exception.getStatusCode());
+        }
     }
 
-    @RequestMapping(value="/list")
-    public ModelAndView listOfDiaryDayPhysics() {
-        ModelAndView modelAndView = new ModelAndView("list-of-goals");
-
-        List diaryDayPhysicsList = diaryDayPhysicsService.getDiaryDayPhysics();
-        modelAndView.addObject("DiaryDayPhysicsList", diaryDayPhysicsList);
-
-        return modelAndView;
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getDiaryDayPhysics(@RequestHeader("Authorization") String token, @PathVariable long id) {
+        try {
+            var user = userService.findByEmail(jwtTokenProvider.getUsername(token))
+                    .orElseThrow(() -> createHttpException(HttpStatus.NOT_FOUND, Constants.USER_NOT_FOUND_CONST));
+            var diaryDaPhysics = diaryDayPhysicsService.getByIdDiaryDayPhysics(id).orElseThrow(() ->
+                    createHttpException(HttpStatus.NOT_FOUND, Constants.DIARY_DAY_PHYSICS_NOT_FOUNDED_CONST));
+            return new ResponseEntity<>(diaryDayPhysicsService, HttpStatus.OK);
+        } catch (HttpClientErrorException exception) {
+            return new ResponseEntity<>(exception.getStatusText(), exception.getStatusCode());
+        }
     }
 
-    @RequestMapping(value="/edit/{id}", method= RequestMethod.GET)
-    public ModelAndView editDiaryDayPhysicsPage(@PathVariable Long id) {
-        ModelAndView modelAndView = new ModelAndView("edit-goal-form");
-        DiaryDayPhysics diaryDayPhysics = diaryDayPhysicsService.getByIdDiaryDayPhysics(id);
-        modelAndView.addObject("DiaryDayPhysics",diaryDayPhysicsService);
-        return modelAndView;
+    @PostMapping
+    public ResponseEntity<?> createDiaryDayPhysics(@RequestHeader("Authorization") String token,
+                                                  @RequestBody DiaryDayPostPhysicsRequestDto diaryDayPostPhysicsRequestDto) {
+        try {
+            var diaryDayPhysics = diaryDayPostPhysicsRequestDto.toDiaryDayPhysics();
+            var user = userService.findByEmail(jwtTokenProvider.getUsername(token))
+                    .orElseThrow(() -> createHttpException(HttpStatus.NOT_FOUND, Constants.USER_NOT_FOUND_CONST));
+            diaryDayPhysics.setUsers(user);
+            if (!diaryDayPhysicsService.addDiaryDayPhysics(diaryDayPhysics)) {
+                throw createHttpException(HttpStatus.INTERNAL_SERVER_ERROR, Constants.SMTH_GOES_WRONG_CONST);
+            }
+            return ResponseEntity.ok(diaryDayPhysics);
+        } catch (HttpClientErrorException exception) {
+            return new ResponseEntity<>(exception.getStatusText(), exception.getStatusCode());
+        }
     }
 
-    @RequestMapping(value="/edit/{id}", method=RequestMethod.POST)
-    public ModelAndView editingDiaryDayPhysics(@ModelAttribute DiaryDayPhysics diaryDayPhysics, @PathVariable Long id) {
-
-        ModelAndView modelAndView = new ModelAndView("home");
-
-        diaryDayPhysicsService.updateDiaryDayPhysics(diaryDayPhysics);
-
-        String message = "DiaryDayPhysics was successfully edited.";
-        modelAndView.addObject("message", message);
-
-        return modelAndView;
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateDiaryDayPhysics(@RequestHeader("Authorization") String token,
+                                                  @RequestBody DiaryDayPhysics diaryDayPhysicsUpdated,
+                                                  @PathVariable long id) {
+        try {
+            var user = userService.findByEmail(jwtTokenProvider.getUsername(token))
+                    .orElseThrow(() -> createHttpException(HttpStatus.NOT_FOUND, Constants.USER_NOT_FOUND_CONST));
+            var diaryDayPhysics = diaryDayPhysicsService.getByIdDiaryDayPhysics(id).orElseThrow(() ->
+                    createHttpException(HttpStatus.NOT_FOUND, Constants.DIARY_DAY_PHYSICS_NOT_FOUNDED_CONST));
+            diaryDayPhysics.setDescription(diaryDayPhysicsUpdated.getDescription());
+            diaryDayPhysics.setHeight(diaryDayPhysicsUpdated.getHeight());
+            diaryDayPhysics.setWeight(diaryDayPhysicsUpdated.getWeight());
+            if (!diaryDayPhysicsService.updateDiaryDayPhysics(diaryDayPhysics)) {
+                throw createHttpException(HttpStatus.INTERNAL_SERVER_ERROR, Constants.SMTH_GOES_WRONG_CONST);
+            }
+            return ResponseEntity.ok(diaryDayPhysics);
+        } catch (HttpClientErrorException exception) {
+            return new ResponseEntity<>(exception.getStatusText(), exception.getStatusCode());
+        }
     }
 
-    @RequestMapping(value="/delete/{id}", method=RequestMethod.GET)
-    public ModelAndView deleteDiaryDayPhysics(@PathVariable Long id) {
-        ModelAndView modelAndView = new ModelAndView("home");
-        diaryDayPhysicsService.deleteDiaryDayPhysics(id);
-        String message = "DiaryDayPhysics was successfully deleted.";
-        modelAndView.addObject("message", message);
-        return modelAndView;
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteDiaryDayMental(@RequestHeader("Authorization") String token,
+                                                  @PathVariable long id) {
+        try {
+            var user = userService.findByEmail(jwtTokenProvider.getUsername(token))
+                    .orElseThrow(() -> createHttpException(HttpStatus.NOT_FOUND, Constants.USER_NOT_FOUND_CONST));
+            var diaryDayPhysics = diaryDayPhysicsService.getByIdDiaryDayPhysics(id).orElseThrow(() ->
+                    createHttpException(HttpStatus.NOT_FOUND, Constants.DIARY_DAY_PHYSICS_NOT_FOUNDED_CONST));
+            if (!diaryDayPhysicsService.deleteDiaryDayPhysics(id)) {
+                throw createHttpException(HttpStatus.INTERNAL_SERVER_ERROR, Constants.SMTH_GOES_WRONG_CONST);
+            }
+            return ResponseEntity.ok().build();
+        } catch (HttpClientErrorException exception) {
+            return new ResponseEntity<>(exception.getStatusText(), exception.getStatusCode());
+        }
     }
-
 }

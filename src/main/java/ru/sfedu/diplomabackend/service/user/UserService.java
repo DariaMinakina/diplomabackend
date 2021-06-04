@@ -18,12 +18,12 @@ public class UserService implements MetaUserService{
     private UserDao userDao;
 
     @Override
-    public User getById(Long id) {
+    public Optional<User> getById(Long id) {
         return userDao.getById(id);
     }
 
     @Override
-    public Optional<Long> addUser(User user) {
+    public boolean addUser(User user) {
         return userDao.addUser(user);
     }
 
@@ -40,5 +40,10 @@ public class UserService implements MetaUserService{
     @Override
     public List getUsers() {
         return userDao.getUsers();
+    }
+
+    @Override
+    public Optional<User> findByEmail(String email) {
+        return userDao.findByEmail(email);
     }
 }

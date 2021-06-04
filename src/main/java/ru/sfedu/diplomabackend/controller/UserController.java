@@ -1,80 +1,65 @@
 package ru.sfedu.diplomabackend.controller;
 
+import javassist.NotFoundException;
+import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
+import ru.sfedu.diplomabackend.Constants;
+import ru.sfedu.diplomabackend.dao.user.UserDao;
 import ru.sfedu.diplomabackend.model.User;
+import ru.sfedu.diplomabackend.security.JwtTokenProvider;
+import ru.sfedu.diplomabackend.security.dto.UserPostRequestDto;
 import ru.sfedu.diplomabackend.service.user.UserService;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
-@RequestMapping(
-        value = "/user",
-        produces = { MediaType.APPLICATION_JSON_VALUE  })
+@RequestMapping(value = "/api/user")
+@AllArgsConstructor
+@CrossOrigin(origins = "*")
 public class UserController {
+
+    private final PasswordEncoder passwordEncoder;
+    private final JwtTokenProvider jwtTokenProvider;
 
     @Autowired
     private UserService userService;
 
-    @RequestMapping(value="/add")
-    public ModelAndView addUserPage() {
-        ModelAndView modelAndView = new ModelAndView("add-goal-form");
-        modelAndView.addObject("user", new User());
-        return modelAndView;
+    @GetMapping("/users")
+    public List getAllUsers() {
+        return userService.getUsers();
     }
 
-    @RequestMapping(value="/add/process")
-    public ModelAndView addingGoal(@ModelAttribute User user) {
-
-        ModelAndView modelAndView = new ModelAndView("home");
-        userService.addUser(user);
-
-        String message = "User was successfully added.";
-        modelAndView.addObject("message", message);
-
-        return modelAndView;
+    @GetMapping
+    public ResponseEntity<User> getUser(@RequestHeader("Authorization") String token) {
+        var optUser = userService.findByEmail(jwtTokenProvider.getUsername(token));
+        return optUser.map(user -> ResponseEntity.ok(user))
+                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
-    @RequestMapping(value="/list")
-    public ModelAndView listOfUsers() {
-        ModelAndView modelAndView = new ModelAndView("list-of-goals");
-
-        List users = userService.getUsers();
-        modelAndView.addObject("users", users);
-
-        return modelAndView;
+    @PutMapping
+    public ResponseEntity<?> updateUser(@RequestBody UserPostRequestDto userPostRequestDto) {
+        var user = userPostRequestDto.toUser();
+        var serverUser = userService.findByEmail(user.getEmail()).orElseThrow(()
+                -> new UsernameNotFoundException(Constants.USER_NOT_FOUND_CONST));
+        user.setId(serverUser.getId());
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        return userService.updateUser(user)
+                ? ResponseEntity.ok(user)
+                : new ResponseEntity<>("Invalid user", HttpStatus.BAD_REQUEST);
     }
 
-    @RequestMapping(value="/edit/{id}", method= RequestMethod.GET)
-    public ModelAndView editUserPage(@PathVariable Long id) {
-        ModelAndView modelAndView = new ModelAndView("edit-goal-form");
-        User user = userService.getById(id);
-        modelAndView.addObject("user",user);
-        return modelAndView;
-    }
-
-    @RequestMapping(value="/edit/{id}", method=RequestMethod.POST)
-    public ModelAndView editingUser(@ModelAttribute User user, @PathVariable Long id) {
-
-        ModelAndView modelAndView = new ModelAndView("home");
-
-        userService.updateUser(user);
-
-        String message = "User was successfully edited.";
-        modelAndView.addObject("message", message);
-
-        return modelAndView;
-    }
-
-    @RequestMapping(value="/delete/{id}", method=RequestMethod.GET)
-    public ModelAndView deleteGoal(@PathVariable Long id) {
-        ModelAndView modelAndView = new ModelAndView("home");
-        userService.deleteUser(id);
-        String message = "User was successfully deleted.";
-        modelAndView.addObject("message", message);
-        return modelAndView;
+    @DeleteMapping
+    public boolean deleteUser(@PathVariable Long id) {
+        return userService.deleteUser(id);
     }
 
 }

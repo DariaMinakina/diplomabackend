@@ -7,12 +7,15 @@ import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
+import ru.sfedu.diplomabackend.dao.user.UserDao;
 import ru.sfedu.diplomabackend.model.Goal;
 import ru.sfedu.diplomabackend.utils.HibernateUtil;
 import static ru.sfedu.diplomabackend.Constants.*;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Repository
 public class GoalDao implements MetaGoalDao{
@@ -28,28 +31,28 @@ public class GoalDao implements MetaGoalDao{
     }
 
     @Override
-    public Goal getById(Long id) {
+    public Optional<Goal> getGoalById(Long id) {
         try {
             Session session = this.getSession();
-            Goal goal = (Goal) session.get(Goal.class, id);
+            Goal goal = session.get(Goal.class, id);
             session.close();
             if (goal == null){
                 log.error(NOT_FOUND_CONST);
-                return null;
+                return Optional.empty();
             }
             else {
                 log.info(FOUND_CONST);
-                return goal;
+                return Optional.of(goal);
             }
         }
         catch (Exception e){
             log.error(e);
-            return null;
+            return Optional.empty();
         }
     }
 
     @Override
-    public Optional<Long> addGoal(Goal goal) {
+    public boolean addGoal(Goal goal) {
         try {
             if (goal != null){
                 Session session = this.getSession();
@@ -58,16 +61,16 @@ public class GoalDao implements MetaGoalDao{
                 transaction.commit();
                 session.close();
                 log.info(ADDED_CONST);
-                return Optional.of(id);
+                return true;
             }
             else {
                 log.error(NOT_ADDED_CONST);
-                return Optional.empty();
+                return false;
             }
         }
         catch (Exception e){
             log.error(e);
-            return Optional.empty();
+            return false;
         }
     }
 
@@ -97,7 +100,7 @@ public class GoalDao implements MetaGoalDao{
     @Override
     public boolean deleteGoal(Long id) {
         try {
-            Goal goal = getById(id);
+            Goal goal = getGoalById(id).get();
             if (goal != null){
                 Session session = this.getSession();
                 Transaction transaction = session.beginTransaction();
@@ -118,9 +121,18 @@ public class GoalDao implements MetaGoalDao{
         }
     }
 
+
     @Override
-    @SuppressWarnings("unchecked")
-    public List getGoals() {
-        return getSession().createQuery("from Goal").list();
+    public Set findByUserId(Long userId){
+        try {
+            if (!new UserDao().getById(userId).isEmpty())
+            return (Set) getSession().createQuery("from Goal where userss.id =:userId").setParameter("userId", userId).stream().collect(Collectors.toSet());
+            else return null;
+        }
+        catch (Exception e){
+            log.error(e);
+            return null;
+        }
     }
+
 }

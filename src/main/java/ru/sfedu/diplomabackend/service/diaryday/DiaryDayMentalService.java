@@ -8,6 +8,7 @@ import ru.sfedu.diplomabackend.model.DiaryDayMental;
 import javax.transaction.Transactional;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 
 @Service
@@ -18,12 +19,12 @@ public class DiaryDayMentalService implements MetaDiaryDayMentalService{
     private DiaryDayMentalDao diaryDayMentalDao;
 
     @Override
-    public DiaryDayMental getByIdDiaryDayMental(Long id) {
+    public Optional<DiaryDayMental> getByIdDiaryDayMental(Long id) {
         return diaryDayMentalDao.getByIdDiaryDayMental(id);
     }
 
     @Override
-    public Optional<Long> addDiaryDayMental(DiaryDayMental diaryDayMental) {
+    public boolean addDiaryDayMental(DiaryDayMental diaryDayMental) {
         return diaryDayMentalDao.addDiaryDayMental(diaryDayMental);
     }
 
@@ -38,7 +39,7 @@ public class DiaryDayMentalService implements MetaDiaryDayMentalService{
     }
 
     @Override
-    public List getDiaryDayMental() {
-        return diaryDayMentalDao.getDiaryDayMental();
+    public Set findDiaryDayMentalByUserId(Long userId) {
+        return diaryDayMentalDao.findDiaryDayMentalByUserId(userId);
     }
 }

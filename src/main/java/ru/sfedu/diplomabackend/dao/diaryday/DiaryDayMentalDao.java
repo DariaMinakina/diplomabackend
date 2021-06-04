@@ -8,11 +8,15 @@ import org.hibernate.Transaction;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.springframework.web.bind.annotation.RequestBody;
+import ru.sfedu.diplomabackend.dao.user.UserDao;
 import ru.sfedu.diplomabackend.model.DiaryDayMental;
+import ru.sfedu.diplomabackend.model.Goal;
 import ru.sfedu.diplomabackend.utils.HibernateUtil;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static ru.sfedu.diplomabackend.Constants.*;
 
@@ -30,28 +34,28 @@ public class DiaryDayMentalDao implements MetaDiaryDayMentalDao {
     }
 
     @Override
-    public DiaryDayMental getByIdDiaryDayMental(Long id) {
+    public Optional<DiaryDayMental> getByIdDiaryDayMental(Long id) {
         try {
             Session session = this.getSession();
             DiaryDayMental diaryDayMental = session.get(DiaryDayMental.class, id);
             session.close();
             if (diaryDayMental == null){
                 log.error(NOT_FOUND_CONST);
-                return null;
+                return Optional.empty();
             }
             else {
                 log.info(FOUND_CONST);
-                return diaryDayMental;
+                return Optional.of(diaryDayMental);
             }
         }
         catch (Exception e){
             log.error(e);
-            return null;
+            return Optional.empty();
         }
     }
 
     @Override
-    public Optional<Long> addDiaryDayMental(DiaryDayMental diaryDayMental) {
+    public boolean addDiaryDayMental(DiaryDayMental diaryDayMental) {
         try {
             if (diaryDayMental != null){
                 Session session = this.getSession();
@@ -60,16 +64,16 @@ public class DiaryDayMentalDao implements MetaDiaryDayMentalDao {
                 transaction.commit();
                 session.close();
                 log.info(ADDED_CONST);
-                return Optional.of(id);
+                return true;
             }
             else {
                 log.error(NOT_ADDED_CONST);
-                return Optional.empty();
+                return false;
             }
         }
         catch (Exception e){
             log.error(e);
-            return Optional.empty();
+            return false;
         }
     }
 
@@ -99,7 +103,7 @@ public class DiaryDayMentalDao implements MetaDiaryDayMentalDao {
     @Override
     public boolean deleteDiaryDayMental(Long id) {
         try {
-            DiaryDayMental diaryDayMental = getByIdDiaryDayMental(id);
+            DiaryDayMental diaryDayMental = getByIdDiaryDayMental(id).get();
             if (diaryDayMental != null){
                 Session session = this.getSession();
                 Transaction transaction = session.beginTransaction();
@@ -120,9 +124,17 @@ public class DiaryDayMentalDao implements MetaDiaryDayMentalDao {
         }
     }
 
+
     @Override
-    @SuppressWarnings("unchecked")
-    public List getDiaryDayMental() {
-        return getSession().createQuery("from DiaryDayMental").list();
+    public Set findDiaryDayMentalByUserId(Long userId) {
+        try {
+            if (!new UserDao().getById(userId).isEmpty())
+                return (Set) getSession().createQuery("from DiaryDayMental where users.id =:userId").setParameter("userId", userId).stream().collect(Collectors.toSet());
+            else return null;
+        }
+        catch (Exception e){
+            log.error(e);
+            return null;
+        }
     }
 }

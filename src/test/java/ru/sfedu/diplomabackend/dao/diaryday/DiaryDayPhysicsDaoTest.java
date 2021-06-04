@@ -3,11 +3,12 @@ package ru.sfedu.diplomabackend.dao.diaryday;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.*;
+import ru.sfedu.diplomabackend.dao.user.UserDao;
 import ru.sfedu.diplomabackend.model.DiaryDayPhysics;
 
 import java.util.Date;
-import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -25,11 +26,8 @@ class DiaryDayPhysicsDaoTest {
         Date date = new Date();
         DiaryDayPhysics diaryDayPhysics = new DiaryDayPhysics(date, "d", 178, 68);
         DiaryDayPhysicsDao instance = new DiaryDayPhysicsDao();
-        Optional<Long> result = instance.addDiaryDayPhysics(diaryDayPhysics);
-        log.info(result);
-        DiaryDayPhysics entity = instance.getByIdDiaryDayPhysics(result.get());
-        log.debug(result.get());
-        Assertions.assertEquals(diaryDayPhysics, entity);
+        diaryDayPhysics.setUsers(new UserDao().getById(1L).get());
+        Assertions.assertTrue(instance.addDiaryDayPhysics(diaryDayPhysics));
     }
 
     @Test
@@ -39,9 +37,8 @@ class DiaryDayPhysicsDaoTest {
         Date date = new Date();
         DiaryDayPhysics diaryDayPhysics = new DiaryDayPhysics(date, null, 178, 68);
         DiaryDayPhysicsDao instance = new DiaryDayPhysicsDao();
-        Optional<Long> result = instance.addDiaryDayPhysics(diaryDayPhysics);
-        log.info(result);
-        Assertions.assertNull(diaryDayPhysics);
+        diaryDayPhysics.setUsers(new UserDao().getById(1L).get());
+        Assertions.assertFalse(instance.addDiaryDayPhysics(diaryDayPhysics));
     }
 
     @Test
@@ -51,9 +48,9 @@ class DiaryDayPhysicsDaoTest {
         Date date = new Date();
         DiaryDayPhysics diaryDayPhysics = new DiaryDayPhysics(date, "d", 178, 68);
         DiaryDayPhysicsDao instance = new DiaryDayPhysicsDao();
-        Optional<Long> result = instance.addDiaryDayPhysics(diaryDayPhysics);
-        log.info(result);
-        Assertions.assertNotNull(result);
+        diaryDayPhysics.setUsers(new UserDao().getById(1L).get());
+        instance.addDiaryDayPhysics(diaryDayPhysics);
+        Assertions.assertNotNull(instance.getByIdDiaryDayPhysics(diaryDayPhysics.getId()));
     }
 
     @Test
@@ -63,10 +60,9 @@ class DiaryDayPhysicsDaoTest {
         Date date = new Date();
         DiaryDayPhysics diaryDayPhysics = new DiaryDayPhysics(date, "d", 178, 68);
         DiaryDayPhysicsDao instance = new DiaryDayPhysicsDao();
-        Optional<Long> result = instance.addDiaryDayPhysics(diaryDayPhysics);
-        log.info(result);
-        DiaryDayPhysics entity = instance.getByIdDiaryDayPhysics(100L);
-        Assertions.assertNull(entity);
+        diaryDayPhysics.setUsers(new UserDao().getById(1L).get());
+        instance.addDiaryDayPhysics(diaryDayPhysics);
+        Assertions.assertEquals(instance.getByIdDiaryDayPhysics(10000L), Optional.empty());
     }
 
     @Test
@@ -76,7 +72,8 @@ class DiaryDayPhysicsDaoTest {
         Date date = new Date();
         DiaryDayPhysics diaryDayPhysics = new DiaryDayPhysics(date, "d", 178, 68);
         DiaryDayPhysicsDao instance = new DiaryDayPhysicsDao();
-        Optional<Long> result = instance.addDiaryDayPhysics(diaryDayPhysics);
+        diaryDayPhysics.setUsers(new UserDao().getById(1L).get());
+        instance.addDiaryDayPhysics(diaryDayPhysics);
         diaryDayPhysics.setHeight(180);
         Assertions.assertTrue(instance.updateDiaryDayPhysics(diaryDayPhysics));
     }
@@ -87,6 +84,7 @@ class DiaryDayPhysicsDaoTest {
         log.info("updateDiaryDayPhysicsFail");
         Date date = new Date();
         DiaryDayPhysics diaryDayPhysics = new DiaryDayPhysics(date, "d", 178, 68);
+        diaryDayPhysics.setUsers(new UserDao().getById(1L).get());
         DiaryDayPhysicsDao instance = new DiaryDayPhysicsDao();
         diaryDayPhysics.setDescription(null);
         Assertions.assertFalse(instance.updateDiaryDayPhysics(diaryDayPhysics));
@@ -98,9 +96,9 @@ class DiaryDayPhysicsDaoTest {
         log.info("deleteDiaryDayPhysicsSuccess");
         Date date = new Date();
         DiaryDayPhysics diaryDayPhysics = new DiaryDayPhysics(date, "d", 178, 68);
+        diaryDayPhysics.setUsers(new UserDao().getById(1L).get());
         DiaryDayPhysicsDao instance = new DiaryDayPhysicsDao();
-        Optional<Long> result = instance.addDiaryDayPhysics(diaryDayPhysics);
-        instance.addDiaryDayPhysics(new DiaryDayPhysics(date, "dd", 165, 42));
+        instance.addDiaryDayPhysics(diaryDayPhysics);
         Assertions.assertTrue(instance.deleteDiaryDayPhysics(diaryDayPhysics.getId()));
     }
 
@@ -111,17 +109,29 @@ class DiaryDayPhysicsDaoTest {
         Date date = new Date();
         DiaryDayPhysics diaryDayPhysics = new DiaryDayPhysics(date, "d", 178, 68);
         DiaryDayPhysicsDao instance = new DiaryDayPhysicsDao();
-        Optional<Long> result = instance.addDiaryDayPhysics(diaryDayPhysics);
+        diaryDayPhysics.setUsers(new UserDao().getById(1L).get());
+        instance.addDiaryDayPhysics(diaryDayPhysics);
         Assertions.assertFalse(instance.deleteDiaryDayPhysics(100L));
     }
 
     @Test
     @Order(8)
-    void getDiaryDayPhysics() {
-        log.info("getAllSuccess");
+    void findDiaryDayPhysicsByUserIdSuccess() {
+        log.info("findDiaryDayPhysicsByUserIdSuccess");
         DiaryDayPhysicsDao instance = new DiaryDayPhysicsDao();
-        List all = instance.getDiaryDayPhysics();
+        Set all = instance.findDiaryDayPhysicsByUserId(1L);
         log.info(all);
         Assertions.assertNotNull(all);
     }
+
+    @Test
+    @Order(10)
+    public void findDiaryDayPhysicsByUserIdFail(){
+        log.info("findDiaryDayPhysicsByUserIdFail");
+        DiaryDayPhysicsDao instance = new DiaryDayPhysicsDao();
+        Set all = instance.findDiaryDayPhysicsByUserId(10000L);
+        log.info(all);
+        Assertions.assertNull(all);
+    }
+
 }

@@ -7,14 +7,16 @@ import java.util.Optional;
 
 public interface MetaUserDao {
 
-    User getById(Long id);
+    Optional<User> getById(Long id);
 
-    Optional<Long> addUser (User user);
+    boolean addUser (User user);
 
     boolean updateUser (User user);
 
     boolean deleteUser (Long id);
 
     List getUsers();
+
+    Optional<User> findByEmail(String email);
 
 }

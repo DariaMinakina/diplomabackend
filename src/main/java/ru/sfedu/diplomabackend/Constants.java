@@ -18,5 +18,9 @@ public class Constants {
     public static final String DELETED_CONST = "Deleted";
     public static final String NOT_DELETED_CONST = "Not deleted";
 
-
+    public static final String USER_NOT_FOUND_CONST = "User not found";
+    public static final String GOAL_NOT_FOUNDED_CONST = "Goal not found";
+    public static final String SMTH_GOES_WRONG_CONST = "Something goes wrong";
+    public static final String DIARY_DAY_MENTAL_NOT_FOUNDED_CONST= "Diary Day Mental not found";
+    public static final String DIARY_DAY_PHYSICS_NOT_FOUNDED_CONST= "Diary Day Physics not found";
 }

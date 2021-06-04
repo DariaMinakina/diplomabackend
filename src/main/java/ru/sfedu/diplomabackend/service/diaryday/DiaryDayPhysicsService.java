@@ -8,6 +8,7 @@ import ru.sfedu.diplomabackend.model.DiaryDayPhysics;
 import javax.transaction.Transactional;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 
 @Service
@@ -18,12 +19,12 @@ public class DiaryDayPhysicsService implements MetaDiaryDayPhysicsService{
     private DiaryDayPhysicsDao diaryDayPhysicsDao;
 
     @Override
-    public DiaryDayPhysics getByIdDiaryDayPhysics(Long id) {
+    public Optional<DiaryDayPhysics> getByIdDiaryDayPhysics(Long id) {
         return diaryDayPhysicsDao.getByIdDiaryDayPhysics(id);
     }
 
     @Override
-    public Optional<Long> addDiaryDayPhysics(DiaryDayPhysics diaryDayPhysics) {
+    public boolean addDiaryDayPhysics(DiaryDayPhysics diaryDayPhysics) {
         return diaryDayPhysicsDao.addDiaryDayPhysics(diaryDayPhysics);
     }
 
@@ -38,7 +39,7 @@ public class DiaryDayPhysicsService implements MetaDiaryDayPhysicsService{
     }
 
     @Override
-    public List getDiaryDayPhysics() {
-        return diaryDayPhysicsDao.getDiaryDayPhysics();
+    public Set findDiaryDayPhysicsByUserId(Long userId) {
+        return diaryDayPhysicsDao.findDiaryDayPhysicsByUserId(userId);
     }
 }

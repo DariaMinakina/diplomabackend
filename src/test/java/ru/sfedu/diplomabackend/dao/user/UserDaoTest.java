@@ -2,15 +2,18 @@ package ru.sfedu.diplomabackend.dao.user;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Order;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
+import ru.sfedu.diplomabackend.dao.goal.GoalDao;
 import ru.sfedu.diplomabackend.model.User;
 
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
+
+
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class UserDaoTest {
 
 
@@ -23,61 +26,48 @@ class UserDaoTest {
     @Order(0)
     void addUserSuccess() {
         log.info("addUserSuccess");
-        Date date = new Date();
-        User user = new User("email@gmail.com", "qwerty123", "daniel", "matrinson",  date);
+        User user = new User("email@gmail.com", "qwerty123", "daniel", "matrinson");
         UserDao instance = new UserDao();
-        Optional<Long> result = instance.addUser(user);
-        log.info(result);
-        User entity = instance.getById(result.get());
-        log.debug(result.get());
-        Assertions.assertEquals(user, entity);
+        Assertions.assertTrue( instance.addUser(user));
     }
 
     @Test
     @Order(1)
     void addUserFail() {
         log.info("addUserFail");
-        Date date = new Date();
-        User user = new User("email@gmail.com", null, "daniel", "matrinson",  date);
+        User user = new User("email@gmail.com", null, "daniel", "matrinson");
         UserDao instance = new UserDao();
-        Optional<Long> result = instance.addUser(user);
-        log.info(result);
-        Assertions.assertNull(user);
+        Assertions.assertFalse( instance.addUser(user));
+    }
+
+    @Test
+    @Order(2)
+    public void getUserByIdSuccess() {
+        log.info("getUserByIdSuccess");
+        User user = new User("email@gmail.com", "qwerty123", "daniel", "matrinson");
+        UserDao instance = new UserDao();
+        instance.addUser(user);
+        Assertions.assertNotNull(instance.getById(user.getId()));
     }
 
     @Test
     @Order(3)
-    public void getByIdUserSuccess() {
-        log.info("getByIdUserSuccess");
-        Date date = new Date();
-        User user = new User("email@gmail.com", "qwerty123", "daniel", "matrinson",  date);
+    public void getUserByIdFail() {
+        log.info("getUserByIdFail");
+        User user = new User("email@gmail.com", "qwerty123", "daniel", "matrinson");
         UserDao instance = new UserDao();
-        Optional<Long> result = instance.addUser(user);
-        log.info(result);
-        Assertions.assertNotNull(result);
+        instance.addUser(user);
+        Assertions.assertEquals(instance.getById(10000L), Optional.empty());
+
     }
 
     @Test
     @Order(4)
-    public void getByIdFail() {
-        log.info("getByIdFail");
-        Date date = new Date();
-        User user = new User("email@gmail.com", "qwerty123", "daniel", "matrinson",  date);
-        UserDao instance = new UserDao();
-        Optional<Long> result = instance.addUser(user);
-        log.info(result);
-        User entity = instance.getById(100L);
-        Assertions.assertNull(entity);
-    }
-
-    @Test
-    @Order(5)
     public void updateUserSuccess(){
         log.info("updateUserSuccess");
-        Date date = new Date();
-        User user = new User("email@gmail.com", "qwerty123", "daniel", "matrinson",  date);
+        User user = new User("email@gmail.com", "qwerty123", "daniel", "matrinson");
         UserDao instance = new UserDao();
-        Optional<Long> result = instance.addUser(user);
+        instance.addUser(user);
         user.setLastName("changed_name");
         Assertions.assertTrue(instance.updateUser(user));
     }
@@ -86,8 +76,7 @@ class UserDaoTest {
     @Order(6)
     public void updateUserFail(){
         log.info("updateUserFail");
-        Date date = new Date();
-        User user = new User("email@gmail.com", "qwerty123", "daniel", "matrinson",  date);
+        User user = new User("email@gmail.com", "qwerty123", "daniel", "matrinson");
         UserDao instance = new UserDao();
         user.setLastName(null);
         Assertions.assertFalse(instance.updateUser(user));
@@ -95,34 +84,21 @@ class UserDaoTest {
 
     @Test
     @Order(7)
-    public void deleteEntitySuccess(){
-        log.info("deleteEntitySuccess");
-        Date date = new Date();
-         User user = new User("email@gmail.com", "qwerty123", "daniel", "matrinson",  date);
+    public void deleteUserSuccess(){
+        log.info("deleteUserSuccess");
+         User user = new User("email@gmail.com", "qwerty123", "daniel", "matrinson");
         UserDao instance = new UserDao();
-        Optional<Long> result = instance.addUser(user);
-        Assertions.assertTrue(instance.deleteUser(result.get()));
+        instance.addUser(user);
+        Assertions.assertTrue(instance.deleteUser(user.getId()));
     }
 
     @Test
     @Order(8)
-    public void deleteEntityFail(){
-        log.info("deleteEntityFail");
-        Date date = new Date();
-        User user = new User("email@gmail.com", "qwerty123", "daniel", "matrinson",  date);
+    public void deleteUserFail(){
+        log.info("deleteUserFail");
+        User user = new User("email@gmail.com", "qwerty123", "daniel", "matrinson");
         UserDao instance = new UserDao();
-        Optional<Long> result = instance.addUser(user);
-        User entity = instance.getById(100L);
-        Assertions.assertFalse(instance.deleteUser(entity.getId()));
-    }
-
-    @Test
-    @Order(9)
-    public void getAllSuccess(){
-        log.info("getAllSuccess");
-        UserDao instance = new UserDao();
-        List all = instance.getUsers();
-        log.info(all);
-        Assertions.assertNotNull(all);
+        instance.addUser(user);
+        Assertions.assertFalse(instance.deleteUser(10000L));
     }
 }

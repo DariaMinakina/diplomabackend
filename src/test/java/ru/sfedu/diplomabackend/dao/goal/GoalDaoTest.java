@@ -3,13 +3,11 @@ package ru.sfedu.diplomabackend.dao.goal;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.*;
+import ru.sfedu.diplomabackend.dao.user.UserDao;
 import ru.sfedu.diplomabackend.model.Goal;
 import ru.sfedu.diplomabackend.model.Priority;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -26,13 +24,10 @@ class GoalDaoTest {
     void addGoalSuccess() {
         log.info("addGoalSuccess");
         Date date = new Date();
-        Goal goal = new Goal(date, "goal_des", "completed", Priority.PRIORITY_3);
+        Goal goal = new Goal(date, "goal_des", Priority.PRIORITY_3);
+        goal.setUserss(new UserDao().getById(1L).get());
         GoalDao instance = new GoalDao();
-        Optional<Long> result = instance.addGoal(goal);
-        log.info(result);
-        Goal entity = instance.getById(result.get());
-        log.debug(result.get());
-        Assertions.assertEquals(goal, entity);
+        Assertions.assertTrue(instance.addGoal(goal));
     }
 
     @Test
@@ -40,11 +35,10 @@ class GoalDaoTest {
     void addGoalFail() {
         log.info("addGoalFail");
         Date date = new Date();
-        Goal goal = new Goal(date, "goal_des", null, Priority.PRIORITY_3);
+        Goal goal = new Goal(date, null, Priority.PRIORITY_3);
+        goal.setUserss(new UserDao().getById(1L).get());
         GoalDao instance = new GoalDao();
-        Optional<Long> result = instance.addGoal(goal);
-        log.info(result);
-        Assertions.assertNull(goal);
+        Assertions.assertFalse(instance.addGoal(goal));
     }
 
     @Test
@@ -52,24 +46,23 @@ class GoalDaoTest {
     public void getByIdGoalSuccess() {
         log.info("getByIdGoalSuccess");
         Date date = new Date();
-        Goal goal = new Goal(date, "goal_des", "completed", Priority.PRIORITY_3);
+        Goal goal = new Goal(date, "goal_des", Priority.PRIORITY_3);
+        goal.setUserss(new UserDao().getById(1L).get());
         GoalDao instance = new GoalDao();
-        Optional<Long> result = instance.addGoal(goal);
-        log.info(result);
-        Assertions.assertNotNull(result);
+        instance.addGoal(goal);
+        Assertions.assertNotNull(instance.getGoalById(goal.getId()));
     }
 
     @Test
     @Order(4)
     public void getByIdFail() {
-        log.info("getByIdFail");
+        log.info("getByIdGoalFail");
         Date date = new Date();
-        Goal goal = new Goal(date, "goal_des", "completed", Priority.PRIORITY_3);
+        Goal goal = new Goal(date, "goal_des", Priority.PRIORITY_3);
+        goal.setUserss(new UserDao().getById(1L).get());
         GoalDao instance = new GoalDao();
-        Optional<Long> result = instance.addGoal(goal);
-        log.info(result);
-        Goal entity = instance.getById(100L);
-        Assertions.assertNull(entity);
+        instance.addGoal(goal);
+        Assertions.assertEquals(instance.getGoalById(10000L), Optional.empty());
     }
 
     @Test
@@ -77,9 +70,10 @@ class GoalDaoTest {
     public void updateGoalSuccess(){
         log.info("updateGoalSuccess");
         Date date = new Date();
-        Goal goal = new Goal(date, "goal_des", "completed", Priority.PRIORITY_3);
+        Goal goal = new Goal(date, "goal_des", Priority.PRIORITY_3);
+        goal.setUserss(new UserDao().getById(1L).get());
         GoalDao instance = new GoalDao();
-        Optional<Long> result = instance.addGoal(goal);
+        instance.addGoal(goal);
         goal.setDescription("changed");
         Assertions.assertTrue(instance.updateGoal(goal));
     }
@@ -89,7 +83,8 @@ class GoalDaoTest {
     public void updateGoalFail(){
         log.info("updateGoalFail");
         Date date = new Date();
-        Goal goal = new Goal(date, "goal_des", "completed", Priority.PRIORITY_3);
+        Goal goal = new Goal(date, "goal_des", Priority.PRIORITY_3);
+        goal.setUserss(new UserDao().getById(1L).get());
         GoalDao instance = new GoalDao();
         goal.setDescription(null);
         Assertions.assertFalse(instance.updateGoal(goal));
@@ -97,36 +92,46 @@ class GoalDaoTest {
 
     @Test
     @Order(7)
-    public void deleteEntitySuccess(){
-        log.info("deleteEntitySuccess");
+    public void deleteGoalSuccess(){
+        log.info("deleteGoalSuccess");
         Date date = new Date();
-        Goal goal = new Goal(date, "goal_des", "completed", Priority.PRIORITY_3);
+        Goal goal = new Goal(date, "goal_des", Priority.PRIORITY_3);
+        goal.setUserss(new UserDao().getById(1L).get());
         GoalDao instance = new GoalDao();
-        Optional<Long> result = instance.addGoal(goal);
-        Assertions.assertTrue(instance.deleteGoal(result.get()));
+        instance.addGoal(goal);
+        Assertions.assertTrue(instance.deleteGoal(goal.getId()));
     }
 
     @Test
     @Order(8)
-    public void deleteEntityFail(){
-        log.info("deleteEntityFail");
+    public void deleteGoalFail(){
+        log.info("deleteGoalFail");
         Date date = new Date();
-        Goal goal = new Goal(date, "goal_des", "completed", Priority.PRIORITY_3);
+        Goal goal = new Goal(date, "goal_des", Priority.PRIORITY_3);
+        goal.setUserss(new UserDao().getById(1L).get());
         GoalDao instance = new GoalDao();
-        Optional<Long> result = instance.addGoal(goal);
-        Goal entity = instance.getById(100L);
-        Assertions.assertFalse(instance.deleteGoal(entity.getId()));
+        instance.addGoal(goal);
+        Assertions.assertFalse(instance.deleteGoal(1000L));
     }
 
     @Test
     @Order(9)
-    public void getAllSuccess(){
-        log.info("getAllSuccess");
+    public void findByUserIdSuccess(){
+        log.info("findByUserIdSuccess");
         GoalDao instance = new GoalDao();
-        List all = new ArrayList();
-        all = instance.getGoals();
+        Set all =  instance.findByUserId(1L);
         log.info(all);
         Assertions.assertNotNull(all);
+    }
+
+    @Test
+    @Order(10)
+    public void findByUserIdFail(){
+        log.info("findByUserIdFail");
+        GoalDao instance = new GoalDao();
+        Set all =  instance.findByUserId(1000L);
+        log.info(all);
+        Assertions.assertNull(all);
     }
 
 }

@@ -2,10 +2,13 @@ package ru.sfedu.diplomabackend.dao.user;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
+import ru.sfedu.diplomabackend.dao.goal.GoalDao;
 import ru.sfedu.diplomabackend.model.User;
 import ru.sfedu.diplomabackend.utils.HibernateUtil;
 
@@ -14,6 +17,7 @@ import java.util.Optional;
 
 import static ru.sfedu.diplomabackend.Constants.*;
 
+@Repository
 public class UserDao implements MetaUserDao{
 
     private static Logger log = LogManager.getLogger(UserDao.class);
@@ -28,46 +32,47 @@ public class UserDao implements MetaUserDao{
 
 
     @Override
-    public User getById(Long id) {
+    public Optional<User> getById(Long id) {
         try {
             Session session = this.getSession();
             User user = session.get(User.class, id);
             session.close();
+            Hibernate.initialize(user.getGoalSet());
             if (user == null){
                 log.error(NOT_FOUND_CONST);
-                return null;
+                return Optional.empty();
             }
             else {
                 log.info(FOUND_CONST);
-                return user;
-            }
-        }
-        catch (Exception e){
-            log.error(e);
-            return null;
-        }
-    }
-
-    @Override
-    public Optional<Long> addUser(User user) {
-        try {
-            if (user != null){
-                Session session = this.getSession();
-                Transaction transaction = session.beginTransaction();
-                Long id = (Long) session.save(user);
-                transaction.commit();
-                session.close();
-                log.info(ADDED_CONST);
-                return Optional.of(id);
-            }
-            else {
-                log.error(NOT_ADDED_CONST);
-                return Optional.empty();
+                return Optional.of(user);
             }
         }
         catch (Exception e){
             log.error(e);
             return Optional.empty();
+        }
+    }
+
+    @Override
+    public boolean addUser(User user) {
+        try {
+            if (user != null){
+                Session session = this.getSession();
+                Transaction transaction = session.beginTransaction();
+                session.save(user);
+                transaction.commit();
+                session.close();
+                log.info(ADDED_CONST);
+                return true;
+            }
+            else {
+                log.error(NOT_ADDED_CONST);
+                return false;
+            }
+        }
+        catch (Exception e){
+            log.error(e);
+            return false;
         }
     }
 
@@ -97,7 +102,7 @@ public class UserDao implements MetaUserDao{
     @Override
     public boolean deleteUser(Long id) {
         try {
-            User user = getById(id);
+            User user = getById(id).get();
             if (user != null){
                 Session session = this.getSession();
                 Transaction transaction = session.beginTransaction();
@@ -122,4 +127,16 @@ public class UserDao implements MetaUserDao{
     public List getUsers() {
         return getSession().createQuery("from User").list();
     }
+
+    @Override
+    public Optional<User> findByEmail(String email) {
+        try{
+            return getSession().createQuery("from User where email =: email").setParameter("email", email).stream().findFirst();
+        }catch (Exception e) {
+            log.error(e);
+            return Optional.empty();
+        }
+    }
+
+
 }

@@ -5,8 +5,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ComponentScan;
 
 @SpringBootApplication
-@ComponentScan({"ru.sfedu.diplomabackend", "controller", "service" })
-public class DiplomaBackendApplication {
+@ComponentScan({"ru.sfedu"})
+public class  DiplomaBackendApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(DiplomaBackendApplication.class, args);

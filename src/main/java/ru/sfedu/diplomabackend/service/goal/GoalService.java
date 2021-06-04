@@ -8,6 +8,7 @@ import ru.sfedu.diplomabackend.model.Goal;
 import javax.transaction.Transactional;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 
 @Service
@@ -18,12 +19,12 @@ public class GoalService implements MetaGoalService{
     private GoalDao goalDao;
 
     @Override
-    public Goal getById(Long id) {
-        return goalDao.getById(id);
+    public Optional<Goal> getGoalById(Long id) {
+        return goalDao.getGoalById(id);
     }
 
     @Override
-    public Optional<Long> addGoal(Goal goal) {
+    public boolean addGoal(Goal goal) {
         return goalDao.addGoal(goal);
     }
 
@@ -38,7 +39,9 @@ public class GoalService implements MetaGoalService{
     }
 
     @Override
-    public List getGoals() {
-        return goalDao.getGoals();
+    public Set findByUserId(Long userId) {
+        return goalDao.findByUserId(userId);
     }
+
+
 }

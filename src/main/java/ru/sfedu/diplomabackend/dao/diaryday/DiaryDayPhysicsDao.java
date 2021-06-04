@@ -7,11 +7,14 @@ import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
+import ru.sfedu.diplomabackend.dao.user.UserDao;
 import ru.sfedu.diplomabackend.model.DiaryDayPhysics;
 import ru.sfedu.diplomabackend.utils.HibernateUtil;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static ru.sfedu.diplomabackend.Constants.*;
 
@@ -29,46 +32,46 @@ public class DiaryDayPhysicsDao implements MetaDiaryDayPhysicsDao{
     }
 
     @Override
-    public DiaryDayPhysics getByIdDiaryDayPhysics(Long id) {
+    public Optional<DiaryDayPhysics> getByIdDiaryDayPhysics(Long id) {
         try {
             Session session = this.getSession();
             DiaryDayPhysics diaryDayPhysics = session.get(DiaryDayPhysics.class, id);
             session.close();
             if (diaryDayPhysics == null){
                 log.error(NOT_FOUND_CONST);
-                return null;
+                return Optional.empty();
             }
             else {
                 log.info(FOUND_CONST);
-                return diaryDayPhysics;
-            }
-        }
-        catch (Exception e){
-            log.error(e);
-            return null;
-        }
-    }
-
-    @Override
-    public Optional<Long> addDiaryDayPhysics(DiaryDayPhysics diaryDayPhysics) {
-        try {
-            if (diaryDayPhysics != null){
-                Session session = this.getSession();
-                Transaction transaction = session.beginTransaction();
-                Long id = (Long) session.save(diaryDayPhysics);
-                transaction.commit();
-                session.close();
-                log.info(ADDED_CONST);
-                return Optional.of(id);
-            }
-            else {
-                log.error(NOT_ADDED_CONST);
-                return Optional.empty();
+                return Optional.of(diaryDayPhysics);
             }
         }
         catch (Exception e){
             log.error(e);
             return Optional.empty();
+        }
+    }
+
+    @Override
+    public boolean addDiaryDayPhysics(DiaryDayPhysics diaryDayPhysics) {
+        try {
+            if (diaryDayPhysics != null){
+                Session session = this.getSession();
+                Transaction transaction = session.beginTransaction();
+                session.save(diaryDayPhysics);
+                transaction.commit();
+                session.close();
+                log.info(ADDED_CONST);
+                return true;
+            }
+            else {
+                log.error(NOT_ADDED_CONST);
+                return false;
+            }
+        }
+        catch (Exception e){
+            log.error(e);
+            return false;
         }
     }
 
@@ -98,7 +101,7 @@ public class DiaryDayPhysicsDao implements MetaDiaryDayPhysicsDao{
     @Override
     public boolean deleteDiaryDayPhysics(Long id) {
         try {
-            DiaryDayPhysics diaryDayPhysics = getByIdDiaryDayPhysics(id);
+            DiaryDayPhysics diaryDayPhysics = getByIdDiaryDayPhysics(id).get();
             if (diaryDayPhysics != null){
                 Session session = this.getSession();
                 Transaction transaction = session.beginTransaction();
@@ -119,9 +122,17 @@ public class DiaryDayPhysicsDao implements MetaDiaryDayPhysicsDao{
         }
     }
 
+
     @Override
-    @SuppressWarnings("unchecked")
-    public List getDiaryDayPhysics() {
-        return getSession().createQuery("from DiaryDayPhysics").list();
+    public Set findDiaryDayPhysicsByUserId(Long userId) {
+        try {
+            if (!new UserDao().getById(userId).isEmpty())
+                return (Set) getSession().createQuery("from DiaryDayPhysics where users.id =:userId").setParameter("userId", userId).stream().collect(Collectors.toSet());
+            else return null;
+        }
+        catch (Exception e){
+            log.error(e);
+            return null;
+        }
     }
 }
